@@ -26,31 +26,34 @@
   {
    "fieldname": "source_warehouse",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Source Warehouse",
    "options": "Warehouse"
   },
   {
    "fieldname": "target_warehouse",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Target Warehouse",
    "options": "Warehouse"
   },
   {
    "fieldname": "qty",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Qty"
   },
   {
    "fieldname": "cost_price",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Cost Price"
   }
  ],
  "grid_page_length": 50,
- "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-25 05:40:01.475001",
+ "modified": "2026-10-02 19:09:33.333895",
  "modified_by": "Administrator",
  "module": "Nattu Kaka Inventory",
  "name": "Stock Movement Item",

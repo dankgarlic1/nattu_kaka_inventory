@@ -75,7 +75,7 @@
  ],
  "grid_page_length": 50,
  "links": [],
- "modified": "2026-10-02 18:40:58.062061",
+ "modified": "2026-10-02 18:45:43.134114",
  "modified_by": "Administrator",
  "module": "Nattu Kaka Inventory",
  "name": "Stock Ledger",
@@ -83,14 +83,14 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "System Manager",
-   "share": 1,
-   "write": 1
+   "share": 1
   }
  ],
  "row_format": "Dynamic",

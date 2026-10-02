@@ -158,6 +158,3 @@ class StockMovement(Document):
 			self.make_ledger_entry(reverse_row, entry.warehouse, -entry.qty, "Adjustment")
 
 		self.update_valuations()
-
-		# how to make tree view default on desk
-		# make ux better add swarehosue in stock movement global

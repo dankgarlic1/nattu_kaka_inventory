@@ -100,7 +100,6 @@ class StockMovement(Document):
 				"reference_id": self.name,
 			}
 		)
-		ledger_doc.flags.ignore_permissions = True
 		ledger_doc.insert()
 
 	def update_valuations(self):
@@ -145,7 +144,7 @@ class StockMovement(Document):
 
 	def on_cancel(self):
 		"""Cleans up the ledger using Query Builder deletion"""
-
+		# do not delete the entry! do the adjustment entry instead
 		ledger = frappe.qb.DocType("Stock Ledger")
 
 		(
@@ -155,3 +154,6 @@ class StockMovement(Document):
 		).run()
 
 		self.update_valuations()
+
+		# how to make tree view default on desk
+		# make ux better add swarehosue in stock movement global

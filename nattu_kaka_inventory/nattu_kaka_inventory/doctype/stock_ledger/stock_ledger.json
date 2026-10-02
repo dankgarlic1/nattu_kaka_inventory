@@ -74,9 +74,8 @@
   }
  ],
  "grid_page_length": 50,
- "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-25 06:13:40.874614",
+ "modified": "2026-10-02 18:40:58.062061",
  "modified_by": "Administrator",
  "module": "Nattu Kaka Inventory",
  "name": "Stock Ledger",
@@ -90,7 +89,8 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
-   "share": 1
+   "share": 1,
+   "write": 1
   }
  ],
  "row_format": "Dynamic",

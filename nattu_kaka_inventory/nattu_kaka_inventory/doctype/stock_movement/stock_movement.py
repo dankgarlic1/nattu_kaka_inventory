@@ -74,18 +74,18 @@ class StockMovement(Document):
 		"""Generates the immutable ledger entries."""
 		for row in self.items:
 			if self.purpose == "Receipt":
-				self.make_ledger_entry(row, row.target_warehouse, row.qty)
+				self.make_ledger_entry(row, row.target_warehouse, row.qty, "Receipt")
 
 			elif self.purpose == "Consume":
-				self.make_ledger_entry(row, row.source_warehouse, -row.qty)
+				self.make_ledger_entry(row, row.source_warehouse, -row.qty, "Consume")
 
 			elif self.purpose == "Transfer":
-				self.make_ledger_entry(row, row.source_warehouse, -row.qty)
-				self.make_ledger_entry(row, row.target_warehouse, row.qty)
+				self.make_ledger_entry(row, row.source_warehouse, -row.qty, "Transfer")
+				self.make_ledger_entry(row, row.target_warehouse, row.qty, "Transfer")
 
 		self.update_valuations()
 
-	def make_ledger_entry(self, row, warehouse, qty):
+	def make_ledger_entry(self, row, warehouse, qty, entry_type):
 		"""Helper function to create a single ledger row."""
 		ledger_doc = frappe.get_doc(
 			{
@@ -98,6 +98,7 @@ class StockMovement(Document):
 				"posting_time": nowtime(),
 				"reference_type": self.doctype,
 				"reference_id": self.name,
+				"entry_type": entry_type,
 			}
 		)
 		ledger_doc.insert()
@@ -108,50 +109,53 @@ class StockMovement(Document):
 			self.update_product_valuation(product)
 
 	def update_product_valuation(self, product_id):
-		"""Replays the product's ledger in posting order to get its moving average rate.
-
-		Only Receipts change the rate: (stock value on hand + incoming value) / total qty.
-		Consumes and Transfers move qty out at the current rate, so the rate stays the same.
-		"""
-
+		"""Replays the product's ledger in posting order to calculate true moving average via total value."""
 		ledger = frappe.qb.DocType("Stock Ledger")
-		movement = frappe.qb.DocType("Stock Movement")
-
 		entries = (
 			frappe.qb.from_(ledger)
-			.join(movement)
-			.on(ledger.reference_id == movement.name)
-			.select(ledger.qty, ledger.valuation_rate, movement.purpose)
-			.where((ledger.product == product_id) & (ledger.reference_type == "Stock Movement"))
+			.select(ledger.qty, ledger.valuation_rate, ledger.entry_type)
+			.where(ledger.product == product_id)
 			.orderby(ledger.posting_date, ledger.posting_time, ledger.creation)
 		).run(as_dict=True)
 
+		stock_value = 0.0
 		qty_on_hand = 0.0
 		avg_rate = 0.0
 
 		for entry in entries:
 			qty, rate = flt(entry.qty), flt(entry.valuation_rate)
 
-			if entry.purpose == "Receipt":
-				if qty_on_hand > 0:
-					avg_rate = (qty_on_hand * avg_rate + qty * rate) / (qty_on_hand + qty)
-				else:
-					avg_rate = rate
-
+			stock_value += qty * rate
 			qty_on_hand += qty
+
+			if qty_on_hand > 0:
+				avg_rate = stock_value / qty_on_hand
+			else:
+				avg_rate = 0.0
+				stock_value = 0.0
 
 		frappe.db.set_value("Product", product_id, "unit_price", avg_rate)
 
 	def on_cancel(self):
-		"""Cleans up the ledger using Query Builder deletion"""
-		# do not delete the entry! do the adjustment entry instead
-		ledger = frappe.qb.DocType("Stock Ledger")
+		"""Posts reverse adjustment entries on cancellation."""
+		ledgers = frappe.get_all(
+			"Stock Ledger",
+			filters={
+				"reference_type": self.doctype,
+				"reference_id": self.name,
+			},
+			fields=["product", "warehouse", "qty", "valuation_rate"],
+		)
 
-		(
-			frappe.qb.from_(ledger)
-			.delete()
-			.where((ledger.reference_type == self.doctype) & (ledger.reference_id == self.name))
-		).run()
+		for entry in ledgers:
+			reverse_row = frappe._dict(
+				{
+					"product": entry.product,
+					"cost_price": entry.valuation_rate,
+				}
+			)
+
+			self.make_ledger_entry(reverse_row, entry.warehouse, -entry.qty, "Adjustment")
 
 		self.update_valuations()
 

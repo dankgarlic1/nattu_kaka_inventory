@@ -157,8 +157,8 @@ class TestStockMovement(IntegrationTestCase):
 		)
 		self.assertEqual(self.get_unit_price(), 150.0)
 
-	def test_cancel_receipt_restores_valuation(self):
-		"""Cancelling a receipt recalculates the average as if it never happened."""
+	def test_cancel_receipt_restores_valuation_and_creates_adjustment(self):
+		"""Cancelling a receipt restores valuation and creates an Adjustment ledger entry (No Deletion)."""
 		self.create_stock_movement("Receipt", 10, 100, target="Mumbai Godown")
 		second = self.create_stock_movement("Receipt", 10, 200, target="Mumbai Godown")
 		self.assertEqual(self.get_unit_price(), 150.0)
@@ -166,3 +166,20 @@ class TestStockMovement(IntegrationTestCase):
 		second.cancel()
 
 		self.assertEqual(self.get_unit_price(), 100.0)
+
+		ledgers = frappe.get_all(
+			"Stock Ledger",
+			filters={"reference_id": second.name},
+			fields=["qty", "entry_type"],
+			order_by="creation asc",
+		)
+
+		self.assertEqual(len(ledgers), 2)
+
+		# Assert the first row is the original Receipt
+		self.assertEqual(ledgers[0].entry_type, "Receipt")
+		self.assertEqual(ledgers[0].qty, 10.0)
+
+		# Assert the second row is the exact opposite Adjustment
+		self.assertEqual(ledgers[1].entry_type, "Adjustment")
+		self.assertEqual(ledgers[1].qty, -10.0)

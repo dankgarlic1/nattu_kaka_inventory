@@ -14,7 +14,8 @@
   "posting_date",
   "posting_time",
   "reference_type",
-  "reference_id"
+  "reference_id",
+  "entry_type"
  ],
  "fields": [
   {
@@ -71,11 +72,19 @@
    "label": "Reference ID",
    "options": "reference_type",
    "reqd": 1
+  },
+  {
+   "fieldname": "entry_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Entry Type",
+   "options": "Receipt\nConsume\nTransfer\nAdjustment",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "links": [],
- "modified": "2026-10-02 18:45:43.134114",
+ "modified": "2026-10-02 19:24:25.308420",
  "modified_by": "Administrator",
  "module": "Nattu Kaka Inventory",
  "name": "Stock Ledger",

@@ -14,6 +14,7 @@ class StockLedger(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		entry_type: DF.Literal["Receipt", "Consume", "Transfer", "Adjustment"]
 		posting_date: DF.Date
 		posting_time: DF.Time
 		product: DF.Link
